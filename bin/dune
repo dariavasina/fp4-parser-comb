@@ -1,0 +1,4 @@
+(executable
+ (public_name fp4)
+ (name main)
+ (libraries fp4))

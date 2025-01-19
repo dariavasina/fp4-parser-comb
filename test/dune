@@ -1,0 +1,3 @@
+(test
+ (name test_fp4)
+ (libraries fp4 alcotest))

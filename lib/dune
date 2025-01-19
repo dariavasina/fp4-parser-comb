@@ -1,0 +1,4 @@
+(library
+ (name fp4)
+ (modules parser basic_parsers json_parser)
+ (libraries str))

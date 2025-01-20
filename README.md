@@ -1,6 +1,5 @@
-# OCaml JSON Parser
-
-A monadic parser combinator library for JSON implemented in OCaml.
+# OCaml Monadic Parser Combinator Library
+Implementation of a parser combinator library that allows to create parsers for various types of data, and an implementation of a JSON parser.
 
 ## Project Structure
 

@@ -1,7 +1,15 @@
 open Parser
 open Basic_parsers
 
-(* parse all whitespace characters *)
+type json_value =
+  | JsonNull
+  | JsonBool of bool
+  | JsonNumber of float
+  | JsonString of string
+  | JsonArray of json_value list
+  | JsonObject of (string * json_value) list
+
+(* parse a sequence of whitespace characters *)
 let ws_parser : string parser = span_parser (fun c -> c = ' ' || c = '\n' || c = '\t' || c = '\r')
 
 let json_null : json_value parser = 
@@ -35,13 +43,13 @@ let json_number : json_value parser =
   in
   return (JsonNumber (sign *. (int_part +. frac_part) *. exp_part))
 
-(* apply parser many times *)
+(* parse zero or more occurences of a given parser until failure *)
 let rec many (p: 'a parser) : 'a list parser = fun input ->
   ((let* x = p in
     let* xs = many p in
     return (x :: xs)) <|> return []) input
 
-(* apply a sequence of parsers *)
+(* apply a list of parsers *)
 let rec sequence (ps: 'a parser list) : 'a list parser = fun input ->
   match ps with
   | [] -> return [] input
@@ -50,7 +58,7 @@ let rec sequence (ps: 'a parser list) : 'a list parser = fun input ->
        let* xs = sequence ps' in
        return (x :: xs)) input
 
-(* parse elements separated by something *)
+(* parse a sequence of elements separated by sep *)
 let sep_by (sep: 'a parser) (elem: 'b parser) : 'b list parser = fun input ->
   ((let* x = elem in
     let* xs = many (sep *> elem) in
@@ -106,3 +114,25 @@ let parse_json (s: string) : (json_value, parser_error) result =
   match json_value { loc = 0; str = s } with
   | Ok (_, value) -> Ok value
   | Error e -> Error e 
+
+let rec show_json_value = function
+  | JsonNull -> "null"
+  | JsonBool b -> string_of_bool b
+  | JsonNumber n -> string_of_float n
+  | JsonString s -> 
+      let escaped = String.concat "" (
+        List.map (function
+          | '\n' -> "\\n"
+          | '"' -> "\\\""
+          | '\\' -> "\\\\"
+          | c -> String.make 1 c
+        ) (List.init (String.length s) (String.get s))
+      ) in
+      Printf.sprintf "\"%s\"" escaped
+  | JsonArray vs -> 
+      "[" ^ String.concat ", " (List.map show_json_value vs) ^ "]"
+  | JsonObject pairs ->
+      let show_pair (k, v) = 
+        Printf.sprintf "\"%s\": %s" k (show_json_value v)
+      in
+      "{" ^ String.concat ", " (List.map show_pair pairs) ^ "}" 

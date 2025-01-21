@@ -123,8 +123,6 @@ let rec show_json_value = function
       let escaped = String.concat "" (
         List.map (function
           | '\n' -> "\\n"
-          | '"' -> "\\\""
-          | '\\' -> "\\\\"
           | c -> String.make 1 c
         ) (List.init (String.length s) (String.get s))
       ) in
